@@ -12,3 +12,8 @@ kubectl get deployments -n iron-namespace-devops
 kubectl get pods -n iron-namespace-devops
 kubectl get svc -n iron-namespace-devops
 ```
+
+
+```bash
+https://32678-port-aw5gm5xpkcllby74.labs.kodekloud.com
+```

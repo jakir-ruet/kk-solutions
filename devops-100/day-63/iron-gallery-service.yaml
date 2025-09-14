@@ -7,8 +7,8 @@ spec:
   selector:
     run: iron-gallery
   ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-      nodePort: 32678
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+    nodePort: 32678
   type: NodePort

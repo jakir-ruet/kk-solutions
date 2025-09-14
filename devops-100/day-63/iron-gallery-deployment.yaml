@@ -14,19 +14,21 @@ spec:
         run: iron-gallery
     spec:
       containers:
-        - name: iron-gallery-container-devops
-          image: kodekloud/irongallery:2.0
-          resources:
-            limits:
-              memory: "100Mi"
-              cpu: "50m"
-          volumeMounts:
-            - name: config
-              mountPath: /usr/share/nginx/html/data
-            - name: images
-              mountPath: /usr/share/nginx/html/uploads
-      volumes:
+      - name: iron-gallery-container-devops
+        image: kodekloud/irongallery:2.0
+        resources:
+          limits:
+            memory: "100Mi"
+            cpu: "50m"
+        volumeMounts:
         - name: config
-          emptyDir: {}
+          mountPath: /usr/share/nginx/html/data
+          subPath: data
         - name: images
-          emptyDir: {}
+          mountPath: /usr/share/nginx/html/uploads
+          subPath: uploads
+      volumes:
+      - name: config
+        emptyDir: {}
+      - name: images
+        emptyDir: {}

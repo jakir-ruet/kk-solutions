@@ -14,20 +14,20 @@ spec:
         db: mariadb
     spec:
       containers:
-        - name: iron-db-container-devops
-          image: kodekloud/irondb:2.0
-          env:
-            - name: MYSQL_DATABASE
-              value: database_blog
-            - name: MYSQL_ROOT_PASSWORD
-              value: R00tP@ssw0rd!23
-            - name: MYSQL_PASSWORD
-              value: Str0ngP@ssw0rd!99
-            - name: MYSQL_USER
-              value: dbuser
-          volumeMounts:
-            - name: db
-              mountPath: /var/lib/mysql
-      volumes:
+      - name: iron-db-container-devops
+        image: kodekloud/irondb:2.0
+        env:
+        - name: MYSQL_DATABASE
+          value: database_web
+        - name: MYSQL_ROOT_PASSWORD
+          value: MyR00tP@ssw0rd!
+        - name: MYSQL_USER
+          value: customuser
+        - name: MYSQL_PASSWORD
+          value: Str0ngP@ssw0rd!
+        volumeMounts:
         - name: db
-          emptyDir: {}
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: db
+        emptyDir: {}
