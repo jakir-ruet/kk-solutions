@@ -1,0 +1,26 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-devops
+  labels:
+    app: devops
+spec:
+  initContainers:
+    - name: init-index
+      image: busybox
+      command: ['sh', '-c', 'echo "<h1>Welcome to DevOps App</h1>" > /usr/local/apache2/htdocs/index.html']
+      volumeMounts:
+        - name: devops-storage
+          mountPath: /usr/local/apache2/htdocs
+  containers:
+    - name: container-devops
+      image: httpd:latest
+      ports:
+        - containerPort: 80
+      volumeMounts:
+        - name: devops-storage
+          mountPath: /usr/local/apache2/htdocs
+  volumes:
+    - name: devops-storage
+      persistentVolumeClaim:
+        claimName: pvc-devops
