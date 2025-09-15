@@ -29,6 +29,7 @@ sudo systemctl restart httpd
 sudo yum install -y mariadb-server
 sudo systemctl enable mariadb
 sudo systemctl start mariadb
+sudo systemctl status mariadb
 ```
 
 ```bash
@@ -56,6 +57,13 @@ CREATE DATABASE kodekloud_db4;
 CREATE USER 'kodekloud_sam'@'%' IDENTIFIED BY 'Rc5C9EyvbU';
 GRANT ALL PRIVILEGES ON kodekloud_db4.* TO 'kodekloud_sam'@'%';
 FLUSH PRIVILEGES;
+
+
+CREATE DATABASE kodekloud_db1;
+CREATE USER 'kodekloud_gem'@'%' IDENTIFIED BY 'ksH85UJjhb';
+GRANT ALL PRIVILEGES ON kodekloud_db1.* TO 'kodekloud_gem'@'%';
+FLUSH PRIVILEGES;
+
 ```
 
 ```bash
