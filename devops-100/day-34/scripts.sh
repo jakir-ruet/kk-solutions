@@ -1,29 +1,18 @@
-ssh natasha@ststor01
-Bl@kW
-sudo su
-
-cd /opt/apps.git/hooks
-
-sudo chown -R natasha:natasha /opt/apps.git
-sudo chown -R natasha:natasha /usr/src/kodekloudrepos/apps
-
-sudo vi post-update
-
-#!/bin/bash
-date=$(date +'%Y-%m-%d') # Get current date in YYYY-MM-DD format
-git --git-dir=/opt/apps.git tag "release-$date" master # Create a release tag with current date
-sudo chmod +x post-update
-
-cd /usr/src/kodekloudrepos/apps
-git branch
-git checkout master
-git merge feature
-git push
-
-cd /opt/apps.git
-git tag
-
-release-2025-09-06 # Should See
-
-
- - required data not found under repo, seems like 'feature' branch was not merged into the 'master' branch
+#!/bin/sh
+DATE=$(date +%F)
+CHANGED_MASTER=0
+for ref in "$@"
+do
+    if echo "$ref" | grep -q "refs/heads/master"; then
+        CHANGED_MASTER=1
+        break
+    fi
+done
+if [ $CHANGED_MASTER -eq 1 ] || [ -z "$@" ]; then
+    echo "Creating release tag for $DATE..."
+    if ! git rev-parse "release-$DATE" >/dev/null 2>&1; then
+        git tag -a "release-$DATE" -m "Release for $DATE"
+    else
+        echo "Tag release-$DATE already exists"
+    fi
+fi
