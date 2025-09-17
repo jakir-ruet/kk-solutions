@@ -1,0 +1,14 @@
+# Redis Slave Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-slave
+spec:
+  type: NodePort
+  selector:
+    app: redis
+    role: slave
+  ports:
+    - port: 6379
+      targetPort: 6379
+      nodePort: 6379
