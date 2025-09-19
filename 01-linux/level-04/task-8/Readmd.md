@@ -1,7 +1,7 @@
 ### php install
 
 ```bash
-ssh steve@stapp03 # password: Ir0nM@n
+ssh tony@stapp01 # password: Ir0nM@n
 sudo -i
 sudo dnf install -y epel-release yum-utils
 sudo dnf install -y https://rpms.remirepo.net/enterprise/remi-release-9.rpm
