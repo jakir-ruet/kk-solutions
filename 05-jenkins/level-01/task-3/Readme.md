@@ -4,9 +4,9 @@
 
 1. Navigate to: **Manage Jenkins → Users → Create User**
 2. Enter the following details:
-   - **Username:** `kirsty`
-   - **Password:** `8FmzjvFU6S`
-   - **Full name:** `Kirsty`
+   - **Username:** `mark`
+   - **Password:** `dCV3szSGNA`
+   - **Full name:** `Mark`
 
 #### Step 2: Install Plugin
 
@@ -21,7 +21,7 @@
 
 3. Assign permissions:
    - **Admin user** → ensure `Overall/Administer` is checked.
-   - **kirsty** → assign `Overall/Read` only.
+   - **mark** → assign `Overall/Read` only.
    - **Anonymous** → remove all permissions (uncheck any boxes).
 
 4. Click **Save**.
