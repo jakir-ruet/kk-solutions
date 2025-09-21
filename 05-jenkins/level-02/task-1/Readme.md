@@ -31,6 +31,6 @@
 - Go `Triggers` & section `Build periodically`
 - Paste `* * * * *`
 - Hit `Apply` & `Save`
-- Hit `Buils Now`
+- Not need to Hit `Build Now`
 
-##### It's automatically build in each minute.
+##### It's automatically build in each minute
