@@ -14,22 +14,45 @@
 
 - Go to `Jenkins Dashboard` > `Manage Jenkins` > `Manage Plugins` > `Available Tab`
 - Update all plugin
-- Install `Git`, `Git Client`, `Parameterized Build`, `Matrix Authorization Strategy` plugins
+- Install `Git`. `Gitea`, `SSH` & `Publish over SSH`, `Parameterized Build`, `Matrix Authorization Strategy` plugins
 - Restart
 
 #### Add Gitea Credentials to Jenkins
 
-- Go to Jenkins `Dashboard` >` Manage Jenkins` > `Manage Credentials` > `(Global) > Add Credentials`.
+- Go to `Dashboard` > `Manage Jenkins` > `Credentials` > `System` > `Global credentials (unrestricted)`
+- Add > `Add Credentials`.
 - Username: `sarah`
 - Password: `Sarah_pass123`
-- ID: `gitea-credentials`
+- ID: `sarah`
 - Description: `Skip`
-- Click `Save`.
+- Click `Create`.
 
-#### Create the Jenkins Job `web_app`
+#### Configure Publish Over SSH
+
+- Passphrase: `Bl@kW`
+- Go to `Dashboard` > `Manage Jenkins` > `System` > `SSH Servers`
+- Name: `ststor01`
+- Hostname: `ststor01`
+- Username: `natasha`
+- Remote Directory: `/data`
+- Test Configuration: `Success`
+
+#### Login on storage server & Verify Permissions for /data directory
+
+```bash
+ssh natasha@ststor01
+Bl@kW
+sudo su -
+Bl@kW
+sudo mkdir /data
+sudo chmod 777 /data
+ls -ld /data
+```
+
+#### Create the Jenkins Job `app-job`
 
 - Go to Jenkins `Dashboard` > `New Item`.
-- Name the job `web_app` and select `Freestyle` project,
+- Name the job `app-job` and select `Freestyle` project,
 - Then click `OK`.
 - Configure the Job
   - General Tab
@@ -40,21 +63,34 @@
     - version1
     - version2
     - version3
+ - Description: `Skip`
+ - Go to `Advanced` > `Use custom workspace`
+- Scroll down to` Advanced Project` Options and enable `Use custom workspace`
+- Set the Workspace path to `/var/lib/jenkins/${Branch}`
+
 
 #### Source Code Management
 
 - Select Git.
 - In the `Repository URL` field, enter:
 - `http://git.stratos.xfusioncorp.com/sarah/web_app.git`
-- Credentials: `gitea-credentials`
-- Branches to build: `${Branch}`
+- Credentials: Select `sarah`
+- Branch Specifier (blank for 'any'): `*/${Branch}`
 
-#### Advanced Project Options (Configure Custom Workspace)
+#### Environment
 
-- Scroll down to` Advanced Project` Options and enable `Use custom workspace`
-- Set the Workspace path to `/var/lib/jenkins/${Branch}`
+- Check `Send files or execute commands over SSH after the build runs`?
+- Name: `ststor01`
+- Transfer Set > Source File: `/var/www/html` # for single file
+- Transfer Set > Source File: `**/*` # for multiple file
 
-#### Build Section `Deploy to Stratos DC`
+#### Post-build Actions → Send build artifacts over SSH
+
+- Source files:	`**/*` or `index.html`
+- Remove prefix:	`leave empty`
+- Remote directory:	`/var/www/html`
+
+#### Or, Build Section `Deploy to Stratos DC`
 
 - Click `Add build` step and choose `Execute shell`.
 
