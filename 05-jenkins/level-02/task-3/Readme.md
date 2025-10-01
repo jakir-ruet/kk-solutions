@@ -112,3 +112,21 @@ cp -r ./* /var/www/html/
 - Click `Save`.
 
 #### Build & Run the Job
+
+
+scripted pipeline works fine.
+Prerequisites
+0. Install necessary plugins (pipeline, pipeline: groovy, git, ssh pipeline step)
+0. create ssh key for ststor01 for natasha user
+0. create credentials sshUserPrivateKey and secret text (for sudo)
+0. read the SSH pipeline step plugin page (you need sshPut and sshCommand)
+
+Process
+1. Create pipeline job
+2. Create parameter type choice with branches - (properties([parameters([ choice()])]) or in UI
+3. checkout scmGit with branches variable and with ws(${Branch}) {}
+4. sshPut - copy index.html to remote server (ex.: to /tmp), sshCommand - echo -n $sudopass | sudo -S mv -f /tmp/index.html /var/www/html/index.html - do not forget sudo: true inside sshCommand.
+
+That's it.
+
+Hope this helps.
