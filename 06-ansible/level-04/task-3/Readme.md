@@ -7,21 +7,6 @@ sudo vi ~/ansible/playbook.yml
   become: yes
   roles:
     - httpd
-
----
-- hosts: stapp01
-  become: yes
-  become_user: root
-  roles:
-    - role/httpd
-
-
----
-- hosts: stapp01
-  become: yes
-  become_user: root
-  roles:
-    - role/httpd
 ```
 
 ```bash
@@ -29,20 +14,11 @@ sudo vi /home/thor/ansible/role/httpd/templates/index.html.j2
 ```
 
 ```bash
-<!DOCTYPE html>
-<html>
-	<head>
-		<title>Welcome</title>
-	</head>
-	<body>
-		<h1>This file was created using Ansible on {{ inventory_hostname }}</h1>
-	</body>
-</html>
+This file was created using Ansible on {{ inventory_hostname }}
 ```
 
 ```bash
-mkdir -p /home/thor/ansible/roles/httpd/templates
-cp -r /home/thor/ansible/role/httpd/templates/ /home/thor/ansible/roles/httpd/templates/
+cp /home/thor/ansible/role /home/thor/ansible/roles
 ```
 
 ```bash
@@ -50,36 +26,32 @@ sudo vi /home/thor/ansible/role/httpd/tasks/main.yml
 ```
 
 ```bash
-- name: install the latest version of HTTPD
+---
+- name: Install the latest version of HTTPD
   yum:
     name: httpd
     state: latest
 
-- name: Start service httpd
+- name: Start and enable httpd service
   service:
     name: httpd
     state: started
+    enabled: yes
 
-- name: Deploy customized index.html from template
+- name: Define sudo user mapping
+  set_fact:
+    sudo_user_map:
+      stapp01: tony
+      stapp02: steve
+      stapp03: banner
+
+- name: Copy index.html template to /var/www/html/
   template:
     src: index.html.j2
     dest: /var/www/html/index.html
-    owner: "{{ ansible_user }}"
-    group: "{{ ansible_user }}"
-    mode: '0755'
-```
-
-```bash
-mkdir -p /home/thor/ansible/roles/httpd/templates/
-cp -r /home/thor/ansible/role/httpd/templates/ /home/thor/ansible/roles/httpd/templates/
-```
-
-```bash
-sudo vi ~/ansible/inventory
-```
-
-```bash
-stapp01 ansible_host=172.16.238.10 ansible_user=banner ansible_ssh_pass=Ir0nM@n ansible_become_pass=Ir0nM@n
+    owner: "{{ sudo_user_map[inventory_hostname] }}"
+    group: "{{ sudo_user_map[inventory_hostname] }}"
+    mode: '0744'
 ```
 
 ```bash
