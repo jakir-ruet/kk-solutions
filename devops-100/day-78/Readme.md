@@ -46,14 +46,18 @@ java -version
 #### Create Jenkins Pipeline Job
 
 - Go to `Jenkins Dashboard` > `New Item`.
-- Name: `devops-webapp-job`
+- Name: `datacenter-webapp-job`
 - Select: `Pipeline`
 - Click `OK`.
 
 ##### Configure Pipeline Job
 
-- Name `devops-webapp-job`
+- Name `datacenter-webapp-job`
 - Description: `leave`
+- Check `This project is parameterized?`
+- Select `String Parameter`
+- Name `BRANCH`
+- Default Value `master`
 - Pipeline > Pipeline script > `script` > paste below code.
 
 ```bash
@@ -80,11 +84,15 @@ pipeline {
 
 - Hit `Apply` and `Save`
 
+#### Build Now
+- Build with Parameters > Select BRANCH > `master` Press `Build`
+- Build with Parameters > Select BRANCH > `feature` Press `Build`
+
 ```bash
 cd /var/www/html
 cat index.html
 ```
 
 ```bash
-Welcome to xFusionCorp Industries! # should show
+Updated # should show
 ```
