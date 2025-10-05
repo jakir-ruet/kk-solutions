@@ -117,5 +117,3 @@ echo BigGr33n | sudo -S systemctl status httpd --no-pager
 - Hit `Ok`
 
 #### Add Build Trigger
-Check GitHub hook trigger for GITScm polling (or equivalent for Gitea webhook)
-https://www.nbtechsupport.co.in/2021/07/deployment-using-jenkins.html
