@@ -59,12 +59,6 @@
 - Remote Directory `/var/www/html`
 - `Apply` & `Save`
 
-#### Create job
-
-- Name `nautilus-app-deployment`
-- `Freestyle` Project
-- `Ok`
-
 #### Build the Job & check the Console output for successful completion
 
 #### Now Create a new Job as per the task
@@ -86,17 +80,33 @@
   - Transfer Set > Source files `**/*`
 - Hit `Save` & `Apply`
 - Hit `Build Now` for taking `target URL`.
-- You should get `Finished: UNSTABLE`
+- You should get `Finished: SUCCESS`
 
-#### Build
+#### Create Webhook in `Gitea`
+- Go to `Webhooks`
+- Target URL `http://jenkins.stratos.xfusioncorp.com:8090/git/notifyCommit?url=http://git.stratos.xfusioncorp.com/sarah/web.git`
+- Check `Trigger on`
+- Branch filter `*`
+- Check `Active`
+- Press `Test Delivery`
+- Should show `40811f56-dbaa-420e-9b20-5de3d054a7ea`
+
+#### Create job as service
+
+- name `manage-services`
+- `Freestyle` project
+- Hit `Ok`
+- Build Triggers
+  - Check `Build after other projects are built`
+  - Projects to watch `nautilus-app-deployment`
+
+#### Build environment
 
 - `Execute shell script on remote host using ssh`
 - Select `tony@stapp01`
 
 ```bash
-echo Ir0nM@n | sudo -S yum install -y httpd
-echo Ir0nM@n | sudo -S sed -i 's/^Listen 80$/Listen 8080/' /etc/httpd/conf/httpd.conf
-echo Ir0nM@n | sudo -S systemctl start httpd
+echo Ir0nM@n | sudo -S systemctl restart httpd
 echo Ir0nM@n | sudo -S systemctl enable httpd
 ```
 
@@ -104,9 +114,7 @@ echo Ir0nM@n | sudo -S systemctl enable httpd
 - Select `steve@stapp02`
 
 ```bash
-echo Am3ric@ | sudo -S yum install -y httpd
-echo Am3ric@ | sudo -S sed -i 's/^Listen 80$/Listen 8080/' /etc/httpd/conf/httpd.conf
-echo Am3ric@ | sudo -S systemctl start httpd
+echo Am3ric@ | sudo -S systemctl restart httpd
 echo Am3ric@ | sudo -S systemctl enable httpd
 ```
 
@@ -114,25 +122,16 @@ echo Am3ric@ | sudo -S systemctl enable httpd
 - Select `banner@stapp03`
 
 ```bash
-echo BigGr33n | sudo -S yum install -y httpd
-echo BigGr33n | sudo -S sed -i 's/^Listen 80$/Listen 8080/' /etc/httpd/conf/httpd.conf
-echo BigGr33n | sudo -S systemctl start httpd
+echo BigGr33n | sudo -S systemctl restart httpd
 echo BigGr33n | sudo -S systemctl enable httpd
 ```
 
-#### Create Webhook in `Gitea`
-- Go to `Webhooks`
-- Target URL `http://jenkins.stratos.xfusioncorp.com:8080/git/notifyCommit?url=http://git.stratos.xfusioncorp.com/sarah/web.git`
-- Check `Trigger on`
-- Branch filter `*`
-- Check `Active`
-- Press `Test Delivery`
+- `Build Now`
 
 #### Make a commit, push & give permission
 
 ```bash
 ssh natasha@ststor01 # Bl@kW
-sudo -i
 su - sarah # Sarah_pass123
 sudo chmod -R 777 /var/www/html # should show `-rwxrwxrwx`
 sudo chown -R sarah:sarah /var/www/html
