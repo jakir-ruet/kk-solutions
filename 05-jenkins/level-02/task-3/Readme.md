@@ -34,19 +34,17 @@
 - Name: `ststor01`
 - Hostname: `ststor01`
 - Username: `natasha`
-- Remote Directory: `/data`
+- Remote Directory: `/var/www/html`
 - Test Configuration: `Success`
 
-#### Login on storage server & Verify Permissions for /data directory
+#### Login on storage server & Verify Permissions for /var/www/html directory
 
 ```bash
-ssh natasha@ststor01
-Bl@kW
-sudo su -
-Bl@kW
-sudo mkdir /data
-sudo chmod 777 /data
-ls -ld /data
+ssh natasha@ststor01 # Bl@kW
+sudo su - # Bl@kW
+sudo mkdir -p /var/www/html # if not available
+sudo chmod 755 /var/www/html
+ls -ld /var/www/html
 ```
 
 #### Create the Jenkins Job `app-job`
@@ -68,7 +66,6 @@ ls -ld /data
 - Scroll down to` Advanced Project` Options and enable `Use custom workspace`
 - Set the Workspace path to `/var/lib/jenkins/${Branch}`
 
-
 #### Source Code Management
 
 - Select Git.
@@ -81,52 +78,18 @@ ls -ld /data
 
 - Check `Send files or execute commands over SSH after the build runs`?
 - Name: `ststor01`
-- Transfer Set > Source File: `/var/www/html` # for single file
 - Transfer Set > Source File: `**/*` # for multiple file
-
-#### Post-build Actions → Send build artifacts over SSH
-
-- Source files:	`**/*` or `index.html`
-- Remove prefix:	`leave empty`
-- Remote directory:	`/var/www/html`
-
-#### Or, Build Section `Deploy to Stratos DC`
-
-- Click `Add build` step and choose `Execute shell`.
-
-```bash
-#!/bin/bash
-cd /var/lib/jenkins/${Branch}
-rm -rf /var/www/html/*
-cp -r ./* /var/www/html/
-```
-
-#### Configure Security (Optional but Recommended)
-
-- Go to Jenkins `Dashboard` > `Manage Jenkins` > `Configure Global Security`.
-- Under `Authorization`, select `Project-based Matrix Authorization Strategy`.
-- Assign permissions:
-  - Admin user: Ensure `Overall/Administer` is checked.
-  - Sarah (your user): Assign `Overall/Read` permission.
-  - Anonymous: Uncheck `all permissions` to restrict access.
-- Click `Save`.
 
 #### Build & Run the Job
 
+#### Build by selecting three version
 
-scripted pipeline works fine.
-Prerequisites
-0. Install necessary plugins (pipeline, pipeline: groovy, git, ssh pipeline step)
-0. create ssh key for ststor01 for natasha user
-0. create credentials sshUserPrivateKey and secret text (for sudo)
-0. read the SSH pipeline step plugin page (you need sshPut and sshCommand)
+- Select `version1` and press `Build Now`
+- Select `version2` and press `Build Now`
+- Select `version3` and press `Build Now`
 
-Process
-1. Create pipeline job
-2. Create parameter type choice with branches - (properties([parameters([ choice()])]) or in UI
-3. checkout scmGit with branches variable and with ws(${Branch}) {}
-4. sshPut - copy index.html to remote server (ex.: to /tmp), sshCommand - echo -n $sudopass | sudo -S mv -f /tmp/index.html /var/www/html/index.html - do not forget sudo: true inside sshCommand.
+#### Verify the Application
 
-That's it.
-
-Hope this helps.
+- This is app version 1
+- This is app version 2
+- This is app version 3
