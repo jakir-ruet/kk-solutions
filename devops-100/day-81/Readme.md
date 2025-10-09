@@ -7,7 +7,7 @@
 
 ### Connect to Jenkins server as root and run (If not available)
 - `ssh jenkins@jenkins` # j@rv!s
-- `sshpass -V` # If already available then not need
+- `sshpass -V` # check sshpass version
 - `yum install sshpass -y`   # RHEL/CentOS, Or
 - `apt install sshpass -y`   # Ubuntu/Debian
 
