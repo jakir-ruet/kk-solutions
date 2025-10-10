@@ -18,7 +18,7 @@ This file was created using Ansible on {{ inventory_hostname }}
 ```
 
 ```bash
-cp /home/thor/ansible/role /home/thor/ansible/roles
+cp -r /home/thor/ansible/role /home/thor/ansible/roles
 ```
 
 ```bash

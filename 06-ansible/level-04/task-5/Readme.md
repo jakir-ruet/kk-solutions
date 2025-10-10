@@ -46,3 +46,12 @@ vi playbook.yml
 ```bash
 ansible-playbook -i inventory playbook.yml
 ```
+
+```bash
+ansible all -i inventory -m ping
+```
+
+```bash
+#debug
+ansible-playbook -i inventory playbook.yml -vvv
+```
