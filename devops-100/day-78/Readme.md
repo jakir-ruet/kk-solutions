@@ -89,8 +89,7 @@ pipeline {
 - Build with Parameters > Select BRANCH > `feature` Press `Build`
 
 ```bash
-cd /var/www/html
-cat index.html
+cat /var/www/html/index.html
 ```
 
 ```bash
