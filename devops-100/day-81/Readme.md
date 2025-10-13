@@ -1,4 +1,4 @@
-### Update all plugin & Insatll below plugins
+### Update all plugin & install below plugins
 
 - Go > `Dashboard` > `Manage Jenkins` > `Plugins` > Check All > Hit `Update` Button.
 - Go > `Dashboard` > `Manage Jenkins` > `Plugins` > Select`Available plugins`.

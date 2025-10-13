@@ -1,10 +1,9 @@
 
-my solution
-#### Update all plugin & Insatll below plugins
+#### Update all plugin & install below plugins
 
 - Go > `Dashboard` > `Manage Jenkins` > `Plugins` > Check All > Hit `Update` Button.
 - Go > `Dashboard` > `Manage Jenkins` > `Plugins` > Select`Available plugins`.
-- Search name `SSH`, `Pipeline`, `Pipeline Groovy` & `SSH Build Agents` > Hit `Install` Button.
+- Search name `Git`, `SSH`, `SSH Build Agents`, `Pipeline`, & `Pipeline Groovy`  > Hit `Install` Button.
 - Restart
 
 #### Create SSH credentials in Jenkins
@@ -75,16 +74,29 @@ sudo chmod -R 755 /var/www
 ```bash
 pipeline {
     agent { label 'ststor01' }
+    parameters {
+        string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to deploy (master or feature)')
+    }
     stages {
         stage('Deploy') {
             steps {
-                // Clone or pull latest from the Gitea repo
                 dir('/var/www/html') {
                     script {
                         if (fileExists('.git')) {
-                            sh 'git pull'
+                            sh """
+                                git fetch origin
+                                git reset --hard origin/${params.BRANCH}
+                                git clean -fd
+                                git checkout ${params.BRANCH}
+                            """
                         } else {
-                            sh 'git clone http://sarah:Sarah_pass123@git.stratos.xfusioncorp.com/sarah/web_app.git .'
+                            checkout([$class: 'GitSCM',
+                                      branches: [[name: "refs/heads/${params.BRANCH}"]],
+                                      userRemoteConfigs: [[
+                                        url: 'http://git.stratos.xfusioncorp.com/sarah/web_app.git',
+                                        credentialsId: 'GIT_CREDS'
+                                      ]]
+                            ])
                         }
                     }
                 }
@@ -92,11 +104,13 @@ pipeline {
         }
     }
 }
+
 ```
 
 - Hit `Apply` and `Save`
 
 #### Build Now
+
 - Build with Parameters > Select BRANCH > `master` Press `Build`
 - Build with Parameters > Select BRANCH > `feature` Press `Build`
 
@@ -105,5 +119,28 @@ cat /var/www/html/index.html
 ```
 
 ```bash
+# for master branch
 Welcome to xFusionCorp Industries! # should show
 ```
+
+```bash
+# for feature branch
+Welcome to xFusionCorp Industries! # should show
+```
+
+#### How to Verify It's Working Correctly
+
+- Go to `Jenkins Dashboard`> `devops-webapp-job` > `Build with Parameters`
+
+- Select: `BRANCH` = `master` > Click `Build`
+- Confirm build succeeds and `/var/www/html/index.html` shows content from master branch.
+
+- Repeat with:
+- Select: `BRANCH` = `feature` > Click `Build`
+- Confirm it now shows content from feature branch instead.
+
+- Lastly, open your browser and go to:
+- https://<LBR-URL>
+- The correct page content should load based on the branch deployed.
+
+- Seems like website is not working.
