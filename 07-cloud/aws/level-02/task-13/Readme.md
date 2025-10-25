@@ -1,198 +1,125 @@
-### Create a VPC
+### Get VPC ID's
 
 ```bash
-aws ec2 create-vpc \
-  --cidr-block 10.0.0.0/16 \
-  --tag-specifications 'ResourceType=vpc,Tags=[{Key=Name,Value=xfusion-pub-vpc}]'
+aws ec2 describe-vpcs --output table
 ```
 
-### Enable DNS hostnames (so instances get public DNS)
+### Create a VPC Peering Connection
 
 ```bash
-aws ec2 modify-vpc-attribute \
-  --vpc-id vpc-0e370c4483934b06d \
-  --enable-dns-support "{\"Value\":true}"
-
-aws ec2 modify-vpc-attribute \
-  --vpc-id vpc-0e370c4483934b06d \
-  --enable-dns-hostnames "{\"Value\":true}"
+aws ec2 create-vpc-peering-connection \
+    --vpc-id vpc-0dc13e1dd5193f601 \
+    --peer-vpc-id vpc-01343d386cc0e3f22 \
+    --tag-specifications 'ResourceType=vpc-peering-connection,Tags=[{Key=Name,Value=devops-vpc-peering}]'
 ```
 
-### Create a Public Subnet
+### Accept the Peering Connection
 
 ```bash
-aws ec2 create-subnet \
-  --vpc-id vpc-0e370c4483934b06d \
-  --cidr-block 10.0.1.0/24 \
-  --availability-zone us-east-1a \
-  --tag-specifications 'ResourceType=subnet,Tags=[{Key=Name,Value=xfusion-pub-subnet}]'
+aws ec2 accept-vpc-peering-connection \
+    --vpc-peering-connection-id pcx-0423d6b77adc01b5a
 ```
 
-### Subnets list under that VPC
-
-```bash
-aws ec2 describe-subnets --filters "Name=vpc-id,Values=vpc-0e370c4483934b06d" \
-  --query "Subnets[*].{SubnetId:SubnetId, CidrBlock:CidrBlock, MapPublicIpOnLaunch:MapPublicIpOnLaunch, AvailabilityZone:AvailabilityZone}" \
-  --output table
-```
-
-### Enable Auto-Assign Public IPs for the Subnet
-
-```bash
-aws ec2 modify-subnet-attribute \
-  --subnet-id subnet-04e284f9833df4e25 \
-  --map-public-ip-on-launch
-```
-
-### Check IGW ID list
-
-```bash
-aws ec2 describe-internet-gateways \
-  --query "InternetGateways[*].{IGW_ID:InternetGatewayId,VPC_ID:Attachments[0].VpcId,State:Attachments[0].State,Tags:Tags}" \
-  --output table
-```
-
-### Create and Attach an Internet Gateway
-
-```bash
-aws ec2 create-internet-gateway \
-  --tag-specifications 'ResourceType=internet-gateway,Tags=[{Key=Name,Value=xfusion-pub-igw}]'
-
-aws ec2 attach-internet-gateway \
-  --vpc-id vpc-0e370c4483934b06d \
-  --internet-gateway-id igw-08301e65419d1e880
-```
-
-### Create a Route Table and Add a Public Route
-
-```bash
-aws ec2 create-route \
-  --route-table-id rtb-08c2a706e983bc3d9 \
-  --destination-cidr-block 0.0.0.0/0 \
-  --gateway-id igw-08301e65419d1e880
-```
-
-### List all route tables in your VPC
+### Route table ID
 
 ```bash
 aws ec2 describe-route-tables \
-  --filters "Name=vpc-id,Values=vpc-0e370c4483934b06d" \
-  --query "RouteTables[*].{RouteTableId:RouteTableId,Main:Associations[0].Main,Tags:Tags}" \
-  --output table
+    --query 'RouteTables[*].{
+        ID: RouteTableId,
+        Name: Tags[?Key==`Name`]|[0].Value,
+        Category: (contains(Routes[].GatewayId, `igw-`) && `Public`) || `Private`
+    }' \
+    --output table
 ```
 
-### Add a route to the internet
+### Private VPC's CIDR
 
 ```bash
+aws ec2 describe-vpcs \
+    --filters Name=isDefault,Values=false \
+    --query 'Vpcs[*].{VPC_ID:VpcId,CIDR:CidrBlock}' \
+    --output table
+```
+
+### Default VPC's CIDR
+
+```bash
+aws ec2 describe-vpcs \
+    --filters Name=isDefault,Values=true \
+    --query 'Vpcs[*].{VPC_ID:VpcId,CIDR:CidrBlock}' \
+    --output table
+```
+
+### Update Route Tables
+
+#### Private VPC route table (devops-private-vpc)
+
+```bash
+# private-vpc-route-table-id `rtb-060bd8fa829d1f32c`
 aws ec2 create-route \
-  --route-table-id rtb-08c2a706e983bc3d9 \
-  --destination-cidr-block 0.0.0.0/0 \
-  --gateway-id igw-08301e65419d1e880
+    --route-table-id rtb-0a30e8f01ca706582 \
+    --destination-cidr-block 172.31.0.0/16 \
+    --vpc-peering-connection-id pcx-0423d6b77adc01b5a
 ```
 
-### Associate the route table with your subnet (if not associated yet)
+#### Default/Public VPC route table
 
 ```bash
-aws ec2 associate-route-table \
-  --subnet-id subnet-04e284f9833df4e25 \
-  --route-table-id rtb-08c2a706e983bc3d9
+# public-vpc-route-table-id  `rtb-0f99a613a2eca8663`
+aws ec2 create-route \
+    --route-table-id rtb-075d42896b0ccbca5 \
+    --destination-cidr-block 10.1.0.0/16 \
+    --vpc-peering-connection-id pcx-0423d6b77adc01b5a
 ```
 
-### Enable auto-assign public IP on your subnet
+### Update Security Groups
 
 ```bash
-aws ec2 describe-subnets \
-  --subnet-ids subnet-04e284f9833df4e25 \
-  --query "Subnets[*].MapPublicIpOnLaunch"
-```
-
-```bash
-aws ec2 modify-subnet-attribute \
-  --subnet-id subnet-04e284f9833df4e25 \
-  --map-public-ip-on-launch
-```
-
-### Create security group
-
-```bash
-aws ec2 create-security-group \
-  --group-name xfusion-pub-sg \
-  --description "Public SSH access" \
-  --vpc-id vpc-0e370c4483934b06d
-```
-
-### List all security groups in your VPC
-
-```bash
-aws ec2 describe-security-groups \
-  --filters "Name=vpc-id,Values=vpc-0e370c4483934b06d" \
-  --query "SecurityGroups[*].{GroupId:GroupId,GroupName:GroupName,Description:Description,Tags:Tags}" \
-  --output table
-```
-
-### Allow inbound SSH
-
-```bash
+# private sg `sg-0d40b6ee5901e06fd `
+# default-vpc-cidr `172.31.0.0/16`
+# Allow ICMP (ping)
 aws ec2 authorize-security-group-ingress \
-  --group-id sg-0e3c9d75343d58c9b \
-  --protocol tcp \
-  --port 22 \
-  --cidr 0.0.0.0/0
+    --group-id sg-0a6cfa32aaae83b4c \
+    --protocol icmp \
+    --port -1 \
+    --cidr 172.31.0.0/16
+
+# Allow SSH (port 22)
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0a6cfa32aaae83b4c \
+    --protocol tcp \
+    --port 22 \
+    --cidr 172.31.0.0/16
 ```
 
-### List the latest Amazon Linux 2 AMI (most common)
+### Determine your public IP
 
 ```bash
-aws ec2 describe-images \
-  --owners amazon \
-  --filters "Name=name,Values=amzn2-ami-hvm-*-x86_64-gp2" "Name=state,Values=available" \
-  --query "sort_by(Images, &CreationDate)[-1].{Name:Name,ImageId:ImageId}" \
-  --output table
+curl http://checkip.amazonaws.com/
 ```
 
-### Create a new key pair
+### Public EC2 instance security group
 
 ```bash
-aws ec2 create-key-pair \
-  --key-name my-keypair \
-  --query "KeyMaterial" \
-  --output text > my-keypair.pem
+# public-ec2-sg-id `sg-0ea1ea00643995cf7`
+# your-local-ip `3.90.2.46`
+aws ec2 authorize-security-group-ingress \
+    --group-id sg-0a6cfa32aaae83b4c \
+    --protocol tcp \
+    --port 22 \
+    --cidr 3.90.2.46/32
 ```
 
-### Launch an EC2 Instance
+### Test Connectivity
 
 ```bash
-aws ec2 run-instances \
-  --image-id ami-057a9f77fd28e08c5 \
-  --instance-type t2.micro \
-  --key-name my-keypair \
-  --subnet-id subnet-04e284f9833df4e25 \
-  --security-group-ids sg-0e3c9d75343d58c9b \
-  --associate-public-ip-address \
-  --tag-specifications 'ResourceType=instance,Tags=[{Key=Name,Value=xfusion-pub-ec2}]'
+# public ip 98.81.131.36
+cat ~/.ssh/ip_rsa # getting public key `ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIElisJd9yotxexQdLolqkbbIuF2K5d0aFgE3/Nh1UO1L ec2-user@aws-client`
+ssh ec2-user@<public_ip> "mkdir -p ~/.ssh && echo '<your-public-key>' >> ~/.ssh/authorized_keys"
+ssh ec2-user@3.90.2.46
+ping 10.1.1.119 # private IP of private server
 ```
 
-### Confirm Your Instance Is Running
 
-```bash
-aws ec2 describe-instances \
-  --filters "Name=tag:Name,Values=xfusion-pub-ec2" \
-  --query "Reservations[*].Instances[*].{ID:InstanceId,State:State.Name,PublicIP:PublicIpAddress,KeyName:KeyName}" \
-  --output table
-```
+ssh ec2-user@3.90.2.46 "mkdir -p ~/.ssh && echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDadmlJkiN43Wndob4bDf55JX4+Tb69jwuw1m3aDLL8HfDPw2l4ud89pLdenDdqgOcLcbn7nYZYh9i2iZpgxIIyNu3nDEoo/es0AqCf9zbR7xBfI4CqPQxd5eekIkZmzKeQs/KkSca3YASnASb68i7QGuWFb0jA77bluO5atXgm7MU9Aw+T5R0CSLWAcacrtc3sWCXs1dA9DP+zEQ6S0n3b/iVM9aXSP0+4Hfh0MbBwCLraF+OxPfEkej/+zrLmAeKwruBwxoTagBJE/QzsaURsdkBh7E/eLOwDme5klDFkYfjDiAyJ/9gYE+6031vqOsRNp3D/0+g5VDgJrwfi/shx root@aws-client' >> ~/.ssh/authorized_keys && chmod 700 ~/.ssh && chmod 600 ~/.ssh/authorized_keys"
 
-### Check Public IP
-
-```bash
-aws ec2 describe-instances \
-  --filters "Name=tag:Name,Values=xfusion-pub-ec2" \
-  --query "Reservations[*].Instances[*].PublicIpAddress" \
-  --output text
-```
-
-### Login
-
-```bash
-chmod 400 my-keypair.pem
-ssh -i my-keypair.pem ec2-user@44.223.61.243
-```
