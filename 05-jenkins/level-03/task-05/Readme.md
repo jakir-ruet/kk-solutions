@@ -1,4 +1,3 @@
-
 #### Update all plugin & install below plugins
 
 - Go > `Dashboard` > `Manage Jenkins` > `Plugins` > Check All > Hit `Update` Button.
@@ -74,28 +73,43 @@ sudo chmod -R 755 /var/www
 ```bash
 pipeline {
     agent { label 'ststor01' }
+
     parameters {
         string(name: 'BRANCH', defaultValue: 'master', description: 'Branch to deploy (master or feature)')
     }
+
     stages {
         stage('Deploy') {
             steps {
-                dir('/var/www/html') {
-                    script {
+                script {
+                    echo "Deploying branch: ${params.BRANCH}"
+
+                    dir('/var/www/html') {
                         if (fileExists('.git')) {
                             sh """
-                                git fetch origin
-                                git reset --hard origin/${params.BRANCH}
+                                echo "Resetting local changes and cleaning workspace..."
+                                git reset --hard
                                 git clean -fd
-                                git checkout ${params.BRANCH}
+
+                                echo "Fetching latest updates from origin..."
+                                git fetch origin
+
+                                echo "Switching to branch ${params.BRANCH}..."
+                                git checkout ${params.BRANCH} || git checkout -b ${params.BRANCH} origin/${params.BRANCH}
+
+                                echo "Resetting branch to remote..."
+                                git reset --hard origin/${params.BRANCH}
+
+                                echo "Deployment complete. Latest commit:"
+                                git log -1 --oneline
                             """
                         } else {
                             checkout([$class: 'GitSCM',
-                                      branches: [[name: "refs/heads/${params.BRANCH}"]],
-                                      userRemoteConfigs: [[
-                                        url: 'http://git.stratos.xfusioncorp.com/sarah/web_app.git',
-                                        credentialsId: 'GIT_CREDS'
-                                      ]]
+                                branches: [[name: "*/${params.BRANCH}"]],
+                                userRemoteConfigs: [[
+                                    url: 'http://git.stratos.xfusioncorp.com/sarah/web_app.git',
+                                    credentialsId: 'GIT_CREDS'
+                                ]]
                             ])
                         }
                     }
@@ -104,7 +118,6 @@ pipeline {
         }
     }
 }
-
 ```
 
 - Hit `Apply` and `Save`
@@ -121,26 +134,21 @@ cat /var/www/html/index.html
 ```bash
 # for master branch
 Welcome to xFusionCorp Industries! # should show
+[root@ststor01 html]# git branch
+  feature
+* master
+[root@ststor01 html]# cat index.html
+Welcome to xFusionCorp Industries!
+[root@ststor01 html]#
 ```
 
 ```bash
 # for feature branch
-Welcome to xFusionCorp Industries! # should show
+Updated # should show
+[root@ststor01 html]# git branch
+* feature
+  master
+[root@ststor01 html]# cat index.html
+Updated
+[root@ststor01 html]#
 ```
-
-#### How to Verify It's Working Correctly
-
-- Go to `Jenkins Dashboard`> `devops-webapp-job` > `Build with Parameters`
-
-- Select: `BRANCH` = `master` > Click `Build`
-- Confirm build succeeds and `/var/www/html/index.html` shows content from master branch.
-
-- Repeat with:
-- Select: `BRANCH` = `feature` > Click `Build`
-- Confirm it now shows content from feature branch instead.
-
-- Lastly, open your browser and go to:
-- https://<LBR-URL>
-- The correct page content should load based on the branch deployed.
-
-- Seems like website is not working.
