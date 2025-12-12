@@ -86,5 +86,3 @@ systemctl restart sshd
 ```bash
 ssh root@98.90.202.182
 ```
-
-
